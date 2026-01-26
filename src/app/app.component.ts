@@ -23,66 +23,75 @@ export class AppComponent implements OnInit {
       this.tg.ready();
       this.tg.expand();
 
-      console.log('Full initData:', this.tg.initData);
-      console.log('Full initDataUnsafe:', this.tg.initDataUnsafe);
+      console.log('Telegram WebApp version:', this.tg.version);
+      console.log('Available methods:', this.tg);
 
-      // Get user info
       if (this.tg.initDataUnsafe?.user) {
         this.user = this.tg.initDataUnsafe.user;
         localStorage.setItem('tg_user', JSON.stringify(this.user));
+      } else {
+        const savedUser = localStorage.getItem('tg_user');
+        if (savedUser) {
+          this.user = JSON.parse(savedUser);
+        }
         
-        // ✅ Try to get phone from user object
-        if (this.user.phone_number) {
-          this.phoneNumber = this.user.phone_number;
-          localStorage.setItem('tg_phone', JSON.stringify(this.phoneNumber));
-          console.log('Phone from user object:', this.phoneNumber);
-        }
       }
 
-      // ✅ Check if contact/phone is in initDataUnsafe
-      if (this.tg.initDataUnsafe?.contact) {
-        this.phoneNumber = this.tg.initDataUnsafe.contact.phone_number;
-        localStorage.setItem('tg_phone', JSON.stringify(this.phoneNumber));
-        console.log('Phone from contact:', this.phoneNumber);
-      }
-
-      // ✅ Parse initData string for phone
-      if (!this.phoneNumber && this.tg.initData) {
-        const phoneMatch = this.tg.initData.match(/phone_number=([^&]+)/);
-        if (phoneMatch) {
-          this.phoneNumber = decodeURIComponent(phoneMatch[1]);
-          localStorage.setItem('tg_phone', JSON.stringify(this.phoneNumber));
-          console.log('Phone from initData string:', this.phoneNumber);
-        }
-      }
-
-      // ✅ Check localStorage as fallback
-      if (!this.phoneNumber) {
-        const savedPhone = localStorage.getItem('tg_phone');
-        if (savedPhone) {
-          this.phoneNumber = JSON.parse(savedPhone);
-          console.log('Phone from localStorage:', this.phoneNumber);
-        }
-      }
-
-      // If still no phone, show button to request it
-      if (!this.phoneNumber) {
-        this.showPhoneRequestButton();
-      }
+      // Show main button
+      this.tg.MainButton.text = 'Share Phone Number';
+      this.tg.MainButton.color = '#0088cc';
+      this.tg.MainButton.textColor = '#ffffff';
+      this.tg.MainButton.show();
+      this.tg.MainButton.onClick(() => {
+        this.requestPhone();
+      });
     } else {
       console.error('Telegram WebApp not available');
     }
   }
 
-  showPhoneRequestButton() {
-    this.tg.MainButton.text = '📱 Share Phone Number';
-    this.tg.MainButton.color = '#0088cc';
-    this.tg.MainButton.textColor = '#ffffff';
-    this.tg.MainButton.show();
-    this.tg.MainButton.onClick(() => {
-      // Inform user to use bot
-      this.tg.showAlert('Please restart the bot with /start and share your phone number');
+  requestPhone() {
+    console.log('requestPhone called');
+    
+    // Method 1: Check if requestContact exists
+    if (typeof this.tg.requestContact === 'function') {
+      console.log('Using requestContact');
+      this.tg.requestContact((result: any) => {
+        console.log('Contact result:', result);
+        
+        if (result && result.responseUnsafe?.contact) {
+          this.phoneNumber = result.responseUnsafe.contact.phone_number;
+          localStorage.setItem('tg_phone', this.phoneNumber);
+          
+          this.tg.MainButton.hide();
+          this.tg.showAlert(`Phone: ${this.phoneNumber}`);
+          
+          this.tg.sendData(JSON.stringify({
+            phone: this.phoneNumber,
+            userId: this.user?.id
+          }));
+        } else {
+          console.log('User cancelled or no data');
+          this.tg.showAlert('Phone not shared');
+        }
+      });
+    } 
+    // Method 2: Try requestWriteAccess first
+    else if (typeof this.tg.requestWriteAccess === 'function') {
+      console.log('Using requestWriteAccess');
+      this.tg.requestWriteAccess((granted: boolean) => {
+        if (granted) {
+          this.tg.showAlert('Access granted! But phone request not available in this version.');
+        } else {
+          this.tg.showAlert('Access denied');
+        }
+      });
+    }
+    // Method 3: Fallback - use KeyboardButton in bot
+    else {
+      console.log('requestContact not available');
+      this.tg.showAlert('Please update your Telegram app or use the bot button to share phone');
       this.tg.close();
-    });
+    }
   }
 }

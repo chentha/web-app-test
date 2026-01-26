@@ -77,28 +77,13 @@ export class AppComponent implements OnInit {
             phone: this.phoneNumber,
             userId: this.user?.id
           }));
+          this.tg.showAlert('Phone is shared!');
         } else {
           console.log('User cancelled or no data');
           this.tg.showAlert('Phone not shared');
         }
       });
     } 
-    // Method 2: Try requestWriteAccess first
-    else if (typeof this.tg.requestWriteAccess === 'function') {
-      console.log('Using requestWriteAccess');
-      this.tg.requestWriteAccess((granted: boolean) => {
-        if (granted) {
-          this.tg.showAlert('Access granted! But phone request not available in this version.');
-        } else {
-          this.tg.showAlert('Access denied');
-        }
-      });
-    }
-    // Method 3: Fallback - use KeyboardButton in bot
-    else {
-      console.log('requestContact not available');
-      this.tg.showAlert('Please update your Telegram app or use the bot button to share phone');
-      this.tg.close();
-    }
+   
   }
 }

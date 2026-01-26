@@ -59,31 +59,44 @@ export class AppComponent implements OnInit {
 
   requestPhone() {
     console.log('requestPhone called');
+    console.log('Telegram version:', this.tg.version);
     
-    // Method 1: Check if requestContact exists
+    // Check version first (requestContact needs 6.9+)
+    if (this.tg.version < '6.9') {
+      this.tg.showAlert('Please update Telegram to use this feature');
+      return;
+    }
+  
     if (typeof this.tg.requestContact === 'function') {
-      console.log('Using requestContact');
-      this.tg.requestContact((result: any) => {
-        console.log('Contact result:', result);
+      console.log('Requesting contact...');
+      
+      // The callback might not work - try without callback first
+      try {
+        this.tg.requestContact();
         
-        if (result && result.responseUnsafe?.contact) {
-          this.phoneNumber = result.responseUnsafe.contact.phone_number;
-          localStorage.setItem('tg_phone', this.phoneNumber);
-          
-          this.tg.MainButton.hide();
-          this.tg.showAlert(`Phone: ${this.phoneNumber}`);
-          
-          this.tg.sendData(JSON.stringify({
-            phone: this.phoneNumber,
-            userId: this.user?.id
-          }));
-          this.tg.showAlert('Phone is shared!');
-        } else {
-          console.log('User cancelled or no data');
-          this.tg.showAlert('Phone not shared');
-        }
-      });
-    } 
-   
+        // Listen for the response on web_app_data event
+        this.tg.onEvent('contactRequested', (data: any) => {
+          console.log('Contact data:', data);
+          if (data?.contact) {
+            this.phoneNumber = data.contact.phone_number;
+            localStorage.setItem('tg_phone', this.phoneNumber);
+            
+            this.tg.MainButton.hide();
+            this.tg.showAlert(`Phone: ${this.phoneNumber}`);
+            
+            this.tg.sendData(JSON.stringify({
+              phone: this.phoneNumber,
+              userId: this.user?.id
+            }));
+          }
+        });
+      } catch (error) {
+        console.error('Error requesting contact:', error);
+        this.tg.showAlert('Error: ' + error);
+      }
+    } else {
+      console.log('requestContact not available');
+      this.tg.showAlert('This feature is not available. Please use the bot button.');
+    }
   }
 }

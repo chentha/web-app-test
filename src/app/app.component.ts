@@ -18,85 +18,71 @@ export class AppComponent implements OnInit {
   tg: any;
 
   ngOnInit() {
-    // Telegram init
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       this.tg = window.Telegram.WebApp;
       this.tg.ready();
       this.tg.expand();
-  
+
+      console.log('Full initData:', this.tg.initData);
+      console.log('Full initDataUnsafe:', this.tg.initDataUnsafe);
+
       // Get user info
       if (this.tg.initDataUnsafe?.user) {
         this.user = this.tg.initDataUnsafe.user;
         localStorage.setItem('tg_user', JSON.stringify(this.user));
-      } else {
-        const savedUser = localStorage.getItem('tg_user');
-        if (savedUser) {
-          this.user = JSON.parse(savedUser);
+        
+        // ✅ Try to get phone from user object
+        if (this.user.phone_number) {
+          this.phoneNumber = this.user.phone_number;
+          localStorage.setItem('tg_phone', JSON.stringify(this.phoneNumber));
+          console.log('Phone from user object:', this.phoneNumber);
         }
       }
-  
-      // ✅ Get phone number from localStorage if available
-      const savedPhone = localStorage.getItem('tg_phone');
-      if (savedPhone) {
-        this.phoneNumber = JSON.parse(savedPhone);
-        console.log('Phone loaded from localStorage:', this.phoneNumber);
-        this.tg.MainButton.hide(); // hide main button if phone exists
-      } else {
-        // Show main button if no phone
-        this.tg.MainButton.text = 'Share Phone Number';
-        this.tg.MainButton.color = '#0088cc';
-        this.tg.MainButton.textColor = '#ffffff';
-        this.tg.MainButton.show();
-        this.tg.MainButton.onClick(() => {
-          this.requestPhone();
-        });
+
+      // ✅ Check if contact/phone is in initDataUnsafe
+      if (this.tg.initDataUnsafe?.contact) {
+        this.phoneNumber = this.tg.initDataUnsafe.contact.phone_number;
+        localStorage.setItem('tg_phone', JSON.stringify(this.phoneNumber));
+        console.log('Phone from contact:', this.phoneNumber);
+      }
+
+      // ✅ Parse initData string for phone
+      if (!this.phoneNumber && this.tg.initData) {
+        const phoneMatch = this.tg.initData.match(/phone_number=([^&]+)/);
+        if (phoneMatch) {
+          this.phoneNumber = decodeURIComponent(phoneMatch[1]);
+          localStorage.setItem('tg_phone', JSON.stringify(this.phoneNumber));
+          console.log('Phone from initData string:', this.phoneNumber);
+        }
+      }
+
+      // ✅ Check localStorage as fallback
+      if (!this.phoneNumber) {
+        const savedPhone = localStorage.getItem('tg_phone');
+        if (savedPhone) {
+          this.phoneNumber = JSON.parse(savedPhone);
+          console.log('Phone from localStorage:', this.phoneNumber);
+        }
+      }
+
+      // If still no phone, show button to request it
+      if (!this.phoneNumber) {
+        this.showPhoneRequestButton();
       }
     } else {
       console.error('Telegram WebApp not available');
     }
   }
-  
 
-  requestPhone() {
-    console.log('requestPhone called');
-    console.log('Telegram version:', this.tg.version);
-    
-    // Check version first (requestContact needs 6.9+)
-    if (this.tg.version < '6.9') {
-      this.tg.showAlert('Please update Telegram to use this feature');
-      return;
-    }
-  
-    if (typeof this.tg.requestContact === 'function') {
-      console.log('Requesting contact...');
-      
-      // The callback might not work - try without callback first
-      try {
-        this.tg.requestContact();
-        
-        // Listen for the response on web_app_data event
-        this.tg.onEvent('contactRequested', (data: any) => {
-          console.log('Contact data:', data);
-          if (data?.contact) {
-            this.phoneNumber = data.contact.phone_number;
-            localStorage.setItem('tg_phone', this.phoneNumber);
-            
-            this.tg.MainButton.hide();
-            this.tg.showAlert(`Phone: ${this.phoneNumber}`);
-            
-            this.tg.sendData(JSON.stringify({
-              phone: this.phoneNumber,
-              userId: this.user?.id
-            }));
-          }
-        });
-      } catch (error) {
-        console.error('Error requesting contact:', error);
-        this.tg.showAlert('Error: ' + error);
-      }
-    } else {
-      console.log('requestContact not available');
-      this.tg.showAlert('This feature is not available. Please use the bot button.');
-    }
+  showPhoneRequestButton() {
+    this.tg.MainButton.text = '📱 Share Phone Number';
+    this.tg.MainButton.color = '#0088cc';
+    this.tg.MainButton.textColor = '#ffffff';
+    this.tg.MainButton.show();
+    this.tg.MainButton.onClick(() => {
+      // Inform user to use bot
+      this.tg.showAlert('Please restart the bot with /start and share your phone number');
+      this.tg.close();
+    });
   }
 }

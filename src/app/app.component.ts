@@ -10,12 +10,14 @@ declare const Telegram: any;
 export class AppComponent {
   title = 'wep-app-test';
 
-  tgUser: any;
+  user: any;
 
   ngOnInit() {
-    // Telegram WebApp object
-    this.tgUser = Telegram.WebApp.initDataUnsafe.user; // user info
-    console.log('Telegram User:', this.tgUser);
+    const tg = Telegram.WebApp;
 
+    // Get user session info
+    this.user = tg.initDataUnsafe?.user;
+
+    console.log('Telegram user:', this.user);
   }
 }

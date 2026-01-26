@@ -18,14 +18,13 @@ export class AppComponent implements OnInit {
   tg: any;
 
   ngOnInit() {
+    // Telegram init
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       this.tg = window.Telegram.WebApp;
       this.tg.ready();
       this.tg.expand();
-
-      console.log('Telegram WebApp version:', this.tg.version);
-      console.log('Available methods:', this.tg);
-
+  
+      // Get user info
       if (this.tg.initDataUnsafe?.user) {
         this.user = this.tg.initDataUnsafe.user;
         localStorage.setItem('tg_user', JSON.stringify(this.user));
@@ -35,19 +34,28 @@ export class AppComponent implements OnInit {
           this.user = JSON.parse(savedUser);
         }
       }
-
-      // Show main button
-      this.tg.MainButton.text = 'Share Phone Number';
-      this.tg.MainButton.color = '#0088cc';
-      this.tg.MainButton.textColor = '#ffffff';
-      this.tg.MainButton.show();
-      this.tg.MainButton.onClick(() => {
-        this.requestPhone();
-      });
+  
+      // ✅ Get phone number from localStorage if available
+      const savedPhone = localStorage.getItem('tg_phone');
+      if (savedPhone) {
+        this.phoneNumber = JSON.parse(savedPhone);
+        console.log('Phone loaded from localStorage:', this.phoneNumber);
+        this.tg.MainButton.hide(); // hide main button if phone exists
+      } else {
+        // Show main button if no phone
+        this.tg.MainButton.text = 'Share Phone Number';
+        this.tg.MainButton.color = '#0088cc';
+        this.tg.MainButton.textColor = '#ffffff';
+        this.tg.MainButton.show();
+        this.tg.MainButton.onClick(() => {
+          this.requestPhone();
+        });
+      }
     } else {
       console.error('Telegram WebApp not available');
     }
   }
+  
 
   requestPhone() {
     console.log('requestPhone called');

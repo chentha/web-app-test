@@ -15,6 +15,9 @@ export class AppComponent {
   ngOnInit() {
     const tg = Telegram.WebApp;
 
+    // Expand mini app
+    tg.expand();
+
     // Get user session info
     this.user = tg.initDataUnsafe?.user;
 

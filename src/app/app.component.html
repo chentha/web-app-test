@@ -1,4 +1,4 @@
-<div *ngIf="user; else noUser">
+<!-- <div *ngIf="user; else noUser"> -->
   <h2>👋 Welcome {{ user.first_name }} {{ user.last_name }}</h2>
 
   <p><strong>ID:</strong> {{ user.id }}</p>
@@ -12,8 +12,8 @@
   <pre style="background:#f4f4f4;padding:10px;border-radius:6px;">
 {{ user | json }}
   </pre>
-</div>
+<!-- </div>
 
 <ng-template #noUser>
   <p>❌ User data not available (not opened inside Telegram)</p>
-</ng-template>
+</ng-template> -->

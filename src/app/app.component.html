@@ -1,19 +1,15 @@
-<!-- <div *ngIf="user; else noUser"> -->
+<div>
   <h2>👋 Welcome {{ user.first_name }} {{ user.last_name }}</h2>
 
-  <p><strong>ID:</strong> {{ user.id }}</p>
+  <!-- <p><strong>ID:</strong> {{ user.id }}</p>
   <p><strong>First name:</strong> {{ user.first_name }}</p>
   <p><strong>Last name:</strong> {{ user.last_name }}</p>
   <p><strong>Username:</strong> {{ user.username || 'N/A' }}</p>
   <p><strong>Language:</strong> {{ user.language_code }}</p>
   <p><strong>Is Premium:</strong> {{ user.is_premium ? 'Yes' : 'No' }}</p>
-  <p><strong>Allows PM:</strong> {{ user.allows_write_to_pm ? 'Yes' : 'No' }}</p>
+  <p><strong>Allows PM:</strong> {{ user.allows_write_to_pm ? 'Yes' : 'No' }}</p> -->
 
   <pre style="background:#f4f4f4;padding:10px;border-radius:6px;">
-{{ user | json }}
+  {{ user | json }}
   </pre>
-<!-- </div>
-
-<ng-template #noUser>
-  <p>❌ User data not available (not opened inside Telegram)</p>
-</ng-template> -->
+</div>

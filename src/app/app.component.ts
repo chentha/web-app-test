@@ -160,15 +160,15 @@ export class AppComponent implements OnInit {
     try {
       const result = await this.telegramService.requestPhoneNumber();
       this.savePhone(result.phone, result.contact);
-      this.statusMessage = `✅ Success: ${result.phone}`;
+      this.statusMessage = `Success: ${result.phone}`;
       this.statusType = 'success';
       this.addLog(`Phone received: ${result.phone}`, 'success');
-      this.telegramService.showAlert(`✅ ${result.phone}`);
+      this.telegramService.showAlert(`${result.phone}`);
     } catch (error: any) {
-      this.statusMessage = `❌ ${error}`;
+      this.statusMessage = ` ${error}`;
       this.statusType = 'error';
       this.addLog(`Error: ${error}`, 'error');
-      this.telegramService.showAlert(`❌ ${error}`);
+      this.telegramService.showAlert(` ${error}`);
     } finally {
       this.isRequesting = false;
     }
@@ -206,15 +206,15 @@ export class AppComponent implements OnInit {
     try {
       const result = await this.telegramService.requestPhoneNumberNative();
       this.savePhone(result.phone, result.contact);
-      this.statusMessage = `✅ Success: ${result.phone}`;
+      this.statusMessage = `Success: ${result.phone}`;
       this.statusType = 'success';
       this.addLog(`Phone received: ${result.phone}`, 'success');
-      this.telegramService.showAlert(`✅ ${result.phone}`);
+      this.telegramService.showAlert(`${result.phone}`);
     } catch (error: any) {
-      this.statusMessage = `❌ ${error}`;
+      this.statusMessage = `${error}`;
       this.statusType = 'error';
       this.addLog(`Error: ${error}`, 'error');
-      this.telegramService.showAlert(`❌ ${error}`);
+      this.telegramService.showAlert(`error ${error}`);
     } finally {
       this.isRequesting = false;
     }

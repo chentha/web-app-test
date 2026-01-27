@@ -33,7 +33,7 @@
     <!-- <p><strong>Phone Number:</strong> {{ phoneNumber }}</p> -->
   
     <div class="container">
-      <h1>📱 Telegram Phone Request</h1>
+      <h1>Telegram Mini App</h1>
       
       <!-- Phone Display -->
       <div class="phone-display" *ngIf="phoneNumber">
@@ -41,7 +41,7 @@
         <div class="phone-box">
           <span class="phone-icon">📱</span>
           <span class="phone-text">{{ phoneNumber }}</span>
-          <span class="phone-text">{{ allData.name }}</span>
+          <span class="phone-text">{{ allData?.telegramUser?.username }}</span>
         </div>
       </div>
 

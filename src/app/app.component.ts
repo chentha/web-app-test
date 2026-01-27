@@ -108,6 +108,8 @@ export class AppComponent implements OnInit {
   // All data object
   allData: any = {};
 
+  welcomeMessage = 'Welcome to WebAppTest';
+
   constructor(private telegramService: TelegramService) {}
 
   ngOnInit() {
@@ -115,6 +117,23 @@ export class AppComponent implements OnInit {
     this.loadFromStorage();
     this.updateAllData();
   }
+
+
+  welcomeMessages(){
+    if(window.Telegram?.WebApp){
+      const tg = window.Telegram.WebApp;
+
+      tg.ready();      // tell Telegram app is ready
+      tg.expand();     // optional: full screen
+
+      const user = tg.initDataUnsafe?.user;
+
+      if (user?.first_name) {
+        this.welcomeMessage = `Welcome To WebAppTest`;
+      }
+    }
+  }
+
 
   updateAllData() {
     const webApp = this.telegramService.getWebApp();

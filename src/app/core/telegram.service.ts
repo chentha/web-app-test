@@ -81,24 +81,56 @@ export class TelegramService {
   }
 
   // Request phone number
-  requestPhoneNumber(): Promise<string> {
+//   requestPhoneNumber(): Promise<string> {
+//     return new Promise((resolve, reject) => {
+//       this.tg.requestContact((sent) => {
+//         if (sent) {
+//           console.log('Contact request sent successfully');
+          
+//           // Listen for contact data
+//           const contact = this.tg.initDataUnsafe.user;
+//           if (contact) {
+//             console.log('Contact data:', contact);
+//           }
+          
+//           resolve('Request sent');
+//         } else {
+//           console.log('User declined to share contact');
+//           reject('User declined');
+//         }
+//       });
+//     });
+//   }
+
+requestPhoneNumberDirect(): Promise<{ phone: string; contact: any }> {
     return new Promise((resolve, reject) => {
-      this.tg.requestContact((sent) => {
-        if (sent) {
-          console.log('Contact request sent successfully');
+      console.log('📞 Requesting contact (Direct API)...');
+      
+      try {
+        // Request contact with proper callback structure
+        (window as any).Telegram.WebApp.requestContact((result: any) => {
+          console.log('Direct API callback result:', result);
           
-          // Listen for contact data
-          const contact = this.tg.initDataUnsafe.user;
-          if (contact) {
-            console.log('Contact data:', contact);
+          if (result && result.contact) {
+            const contact = result.contact;
+            console.log('✅ Phone received:', contact.phone_number);
+            
+            resolve({
+              phone: contact.phone_number,
+              contact: contact
+            });
+          } else if (result === false) {
+            console.log('❌ User declined');
+            reject('User declined');
+          } else {
+            console.log('⚠️ Unexpected result:', result);
+            reject('Unexpected response format');
           }
-          
-          resolve('Request sent');
-        } else {
-          console.log('User declined to share contact');
-          reject('User declined');
-        }
-      });
+        });
+      } catch (error) {
+        console.error('Error calling requestContact:', error);
+        reject(error);
+      }
     });
   }
 

@@ -99,61 +99,174 @@ export class AppComponent implements OnInit {
   
 
   userData: any = null;
+  phoneNumber: string | null = null;
+  contactInfo: any = null;
+  phoneTimestamp: Date | null = null;
+  storageData: any = {};
+  showStorage: boolean = false;
+  isRequesting: boolean = false;
+  requestStatus: { type: string; message: string } | null = null;
 
   constructor(private telegramService: TelegramService) {}
 
   ngOnInit() {
-    // Get user data
+    this.loadFromStorage();
     this.userData = this.telegramService.getUserData();
-    
-    // Automatically log data on init
-    this.logUserData();
+    this.saveUserDataToStorage();
+    console.log('🚀 App initialized');
   }
 
-  logUserData() {
-    const data = this.telegramService.logAllUserData();
-    console.log('Returned data:', data);
-  }
+  loadFromStorage() {
+    const savedPhone = localStorage.getItem('telegram_phone_number');
+    if (savedPhone) {
+      this.phoneNumber = savedPhone;
+      console.log('📱 Loaded phone from storage:', savedPhone);
+    }
 
-  async requestPhone() {
-    try {
-      const result = await this.telegramService.requestPhoneNumber();
-      console.log('Phone request result:', result);
-      this.telegramService.showAlert('Phone number request sent!');
-    } catch (error) {
-      console.error('Phone request error:', error);
-      this.telegramService.showAlert('User declined to share phone number');
+    const savedContact = localStorage.getItem('telegram_contact');
+    if (savedContact) {
+      this.contactInfo = JSON.parse(savedContact);
+    }
+
+    const savedTimestamp = localStorage.getItem('phone_timestamp');
+    if (savedTimestamp) {
+      this.phoneTimestamp = new Date(savedTimestamp);
+    }
+
+    const savedUserData = localStorage.getItem('telegram_user_data');
+    if (savedUserData) {
+      this.userData = JSON.parse(savedUserData);
     }
   }
 
-  showUserAlert() {
-    this.telegramService.showAlert(
-      `Hello ${this.userData?.first_name || 'User'}! This is an alert.`
-    );
-  }
-
-  async showUserConfirm() {
-    const confirmed = await this.telegramService.showConfirm(
-      'Do you want to continue?'
-    );
-    console.log('User confirmed:', confirmed);
-    
-    if (confirmed) {
-      this.telegramService.showAlert('You clicked OK!');
-    } else {
-      this.telegramService.showAlert('You clicked Cancel!');
+  saveUserDataToStorage() {
+    if (this.userData) {
+      localStorage.setItem('telegram_user_data', JSON.stringify(this.userData));
+      console.log('💾 User data saved to storage');
     }
   }
 
-  sendDataToBot() {
-    const dataToSend = {
-      userId: this.userData?.id,
-      action: 'test_action',
-      timestamp: new Date().toISOString()
+  savePhoneToStorage(phone: string, contact: any) {
+    this.phoneNumber = phone;
+    this.contactInfo = contact;
+    this.phoneTimestamp = new Date();
+
+    localStorage.setItem('telegram_phone_number', phone);
+    localStorage.setItem('telegram_contact', JSON.stringify(contact));
+    localStorage.setItem('phone_timestamp', this.phoneTimestamp.toISOString());
+    
+    console.log('✅ Phone data saved to localStorage');
+    this.updateStorageData();
+  }
+
+  updateStorageData() {
+    this.storageData = {
+      userData: this.userData,
+      phoneNumber: this.phoneNumber,
+      contactInfo: this.contactInfo,
+      phoneTimestamp: this.phoneTimestamp,
+      storageKeys: Object.keys(localStorage)
     };
+  }
+
+  // Method 1: Using SDK
+  async requestPhone() {
+    if (this.isRequesting) return;
     
-    console.log('Sending data to bot:', dataToSend);
-    this.telegramService.sendData(dataToSend);
+    this.isRequesting = true;
+    this.requestStatus = null;
+    
+    try {
+      console.log('🔄 Requesting phone number...');
+      
+      const result = await this.telegramService.requestPhoneNumberDirect();
+      
+      console.log('✅ SUCCESS! Phone received:', result.phone);
+      console.log('📋 Contact info:', result.contact);
+      
+      // Save to component state and localStorage
+      this.savePhoneToStorage(result.phone, result.contact);
+      
+      // Show success status
+      this.requestStatus = {
+        type: 'success',
+        message: `✅ Phone number received: ${result.phone}`
+      };
+      
+      // Show Telegram alert
+      this.telegramService.showAlert(`✅ Phone: ${result.phone}`);
+      
+    } catch (error: any) {
+      console.error('❌ Error:', error);
+      
+      this.requestStatus = {
+        type: 'error',
+        message: `❌ ${error}`
+      };
+      
+      this.telegramService.showAlert(`❌ ${error}`);
+      
+    } finally {
+      this.isRequesting = false;
+    }
+  }
+
+  // Method 2: Using Direct API
+  async requestPhoneDirect() {
+    if (this.isRequesting) return;
+    
+    this.isRequesting = true;
+    this.requestStatus = null;
+    
+    try {
+      console.log('🔄 Requesting phone (Direct API)...');
+      
+      const result = await this.telegramService.requestPhoneNumberDirect();
+      
+      console.log('✅ Phone received:', result.phone);
+      
+      this.savePhoneToStorage(result.phone, result.contact);
+      
+      this.requestStatus = {
+        type: 'success',
+        message: `✅ Phone: ${result.phone}`
+      };
+      
+      this.telegramService.showAlert(`✅ Success: ${result.phone}`);
+      
+    } catch (error: any) {
+      console.error('❌ Error:', error);
+      
+      this.requestStatus = {
+        type: 'error',
+        message: `❌ ${error}`
+      };
+      
+      this.telegramService.showAlert(`❌ ${error}`);
+      
+    } finally {
+      this.isRequesting = false;
+    }
+  }
+
+  showStoredData() {
+    this.showStorage = !this.showStorage;
+    this.updateStorageData();
+    console.log('📦 Storage data:', this.storageData);
+  }
+
+  clearAllData() {
+    if (confirm('⚠️ Clear all data including phone number?')) {
+      localStorage.clear();
+      this.phoneNumber = null;
+      this.contactInfo = null;
+      this.phoneTimestamp = null;
+      this.requestStatus = null;
+      this.storageData = {};
+      
+      console.log('🗑️ All data cleared');
+      this.telegramService.showAlert('🗑️ All data cleared!');
+    }
   }
 
 }

@@ -33,74 +33,76 @@
     <!-- <p><strong>Phone Number:</strong> {{ phoneNumber }}</p> -->
   
     <div class="container">
-      <h1>📱 Telegram Mini App</h1>
+      <h1>📱 Telegram Phone Request</h1>
       
-      <!-- User Info -->
-      <div class="user-info" *ngIf="userData">
-        <h2>👤 User Information</h2>
-        <div class="info-grid">
-          <div class="info-item">
-            <strong>ID:</strong> {{ userData.id }}
-          </div>
-          <div class="info-item">
-            <strong>Name:</strong> {{ userData.first_name }} {{ userData.last_name }}
-          </div>
-          <div class="info-item">
-            <strong>Username:</strong> @{{ userData.username || 'N/A' }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Phone Number Display -->
+      <!-- Phone Display -->
       <div class="phone-display" *ngIf="phoneNumber">
-        <h2>📞 Phone Number Received!</h2>
+        <h2>✅ Phone Number Received!</h2>
         <div class="phone-box">
           <span class="phone-icon">📱</span>
           <span class="phone-text">{{ phoneNumber }}</span>
         </div>
-        <div class="contact-details" *ngIf="contactInfo">
-          <p><strong>Name:</strong> {{ contactInfo.first_name }} {{ contactInfo.last_name }}</p>
-          <p><strong>User ID:</strong> {{ contactInfo.user_id }}</p>
+        <div class="contact-info" *ngIf="contactInfo">
+          <p>👤 {{ contactInfo.first_name }} {{ contactInfo.last_name }}</p>
+          <p>🆔 ID: {{ contactInfo.user_id }}</p>
         </div>
-        <p class="phone-timestamp">Received: {{ phoneTimestamp | date:'medium' }}</p>
       </div>
 
-      <!-- Request Status -->
-      <div class="status-box" *ngIf="requestStatus">
-        <p [class.success]="requestStatus.type === 'success'" 
-           [class.error]="requestStatus.type === 'error'">
-          {{ requestStatus.message }}
-        </p>
+      <!-- Error/Status Display -->
+      <div class="status-box" *ngIf="statusMessage">
+        <div [class]="'status ' + statusType">
+          {{ statusMessage }}
+        </div>
       </div>
 
-      <!-- Actions -->
+      <!-- Debug Info -->
+      <div class="debug-info">
+        <h3>🔍 Debug Information</h3>
+        <p><strong>Telegram Version:</strong> {{ telegramVersion }}</p>
+        <p><strong>Platform:</strong> {{ platform }}</p>
+        <p><strong>User ID:</strong> {{ userId }}</p>
+      </div>
+
+      <!-- Action Buttons -->
       <div class="actions">
-        <button (click)="requestPhone()" 
-                class="btn btn-success" 
+        <button (click)="requestMethod1()" 
+                class="btn btn-primary" 
                 [disabled]="isRequesting">
-          <span *ngIf="!isRequesting">📞 Request Phone Number</span>
+          <span *ngIf="!isRequesting">📞 Method 1: Standard SDK</span>
           <span *ngIf="isRequesting">⏳ Requesting...</span>
         </button>
-        
-        <button (click)="requestPhoneDirect()" 
+
+        <button (click)="requestMethod2()" 
                 class="btn btn-info" 
                 [disabled]="isRequesting">
-          📞 Request Phone (Direct API)
+          <span *ngIf="!isRequesting">📞 Method 2: Event Listener</span>
+          <span *ngIf="isRequesting">⏳ Requesting...</span>
         </button>
-        
-        <button (click)="showStoredData()" class="btn btn-primary">
-          📦 Show Stored Data
+
+        <button (click)="requestMethod3()" 
+                class="btn btn-success" 
+                [disabled]="isRequesting">
+          <span *ngIf="!isRequesting">📞 Method 3: Native API</span>
+          <span *ngIf="isRequesting">⏳ Requesting...</span>
         </button>
-        
-        <button (click)="clearAllData()" class="btn btn-danger">
-          🗑️ Clear All Data
+
+        <button (click)="clearData()" class="btn btn-danger">
+          🗑️ Clear Data
+        </button>
+
+        <button (click)="viewConsole()" class="btn btn-secondary">
+          🔍 Log Debug Info to Console
         </button>
       </div>
 
-      <!-- Storage Display -->
-      <div class="storage-data" *ngIf="showStorage">
-        <h3>📦 LocalStorage Data</h3>
-        <pre>{{ storageData | json }}</pre>
+      <!-- Console Output -->
+      <div class="console-output">
+        <h3>📝 Console Output</h3>
+        <div class="console-content">
+          <div *ngFor="let log of consoleLog" [class]="'log-' + log.type">
+            <strong>{{ log.time }}</strong> - {{ log.message }}
+          </div>
+        </div>
       </div>
     </div>
 

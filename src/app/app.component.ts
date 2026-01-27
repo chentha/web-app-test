@@ -98,174 +98,140 @@ export class AppComponent implements OnInit {
 
   
 
-  userData: any = null;
   phoneNumber: string | null = null;
   contactInfo: any = null;
-  phoneTimestamp: Date | null = null;
-  storageData: any = {};
-  showStorage: boolean = false;
   isRequesting: boolean = false;
-  requestStatus: { type: string; message: string } | null = null;
+  statusMessage: string = '';
+  statusType: string = '';
+  consoleLog: Array<{ time: string; message: string; type: string }> = [];
+  
+  telegramVersion: string = '';
+  platform: string = '';
+  userId: number = 0;
 
   constructor(private telegramService: TelegramService) {}
 
   ngOnInit() {
+    const webApp = this.telegramService.getWebApp();
+    this.telegramVersion = webApp.version;
+    this.platform = webApp.platform;
+    this.userId = webApp.initDataUnsafe?.user?.id || 0;
+    
+    this.addLog('App initialized', 'info');
     this.loadFromStorage();
-    this.userData = this.telegramService.getUserData();
-    this.saveUserDataToStorage();
-    console.log('🚀 App initialized');
+  }
+
+  addLog(message: string, type: string = 'info') {
+    const time = new Date().toLocaleTimeString();
+    this.consoleLog.unshift({ time, message, type });
+    if (this.consoleLog.length > 50) {
+      this.consoleLog.pop();
+    }
+    console.log(`[${type.toUpperCase()}] ${message}`);
   }
 
   loadFromStorage() {
     const savedPhone = localStorage.getItem('telegram_phone_number');
     if (savedPhone) {
       this.phoneNumber = savedPhone;
-      console.log('📱 Loaded phone from storage:', savedPhone);
+      this.addLog(`Loaded phone from storage: ${savedPhone}`, 'success');
     }
 
     const savedContact = localStorage.getItem('telegram_contact');
     if (savedContact) {
       this.contactInfo = JSON.parse(savedContact);
     }
-
-    const savedTimestamp = localStorage.getItem('phone_timestamp');
-    if (savedTimestamp) {
-      this.phoneTimestamp = new Date(savedTimestamp);
-    }
-
-    const savedUserData = localStorage.getItem('telegram_user_data');
-    if (savedUserData) {
-      this.userData = JSON.parse(savedUserData);
-    }
   }
 
-  saveUserDataToStorage() {
-    if (this.userData) {
-      localStorage.setItem('telegram_user_data', JSON.stringify(this.userData));
-      console.log('💾 User data saved to storage');
-    }
-  }
-
-  savePhoneToStorage(phone: string, contact: any) {
+  savePhone(phone: string, contact: any) {
     this.phoneNumber = phone;
     this.contactInfo = contact;
-    this.phoneTimestamp = new Date();
-
     localStorage.setItem('telegram_phone_number', phone);
     localStorage.setItem('telegram_contact', JSON.stringify(contact));
-    localStorage.setItem('phone_timestamp', this.phoneTimestamp.toISOString());
-    
-    console.log('✅ Phone data saved to localStorage');
-    this.updateStorageData();
+    this.addLog(`Phone saved: ${phone}`, 'success');
   }
 
-  updateStorageData() {
-    this.storageData = {
-      userData: this.userData,
-      phoneNumber: this.phoneNumber,
-      contactInfo: this.contactInfo,
-      phoneTimestamp: this.phoneTimestamp,
-      storageKeys: Object.keys(localStorage)
-    };
-  }
-
-  // Method 1: Using SDK
-  async requestPhone() {
+  async requestMethod1() {
     if (this.isRequesting) return;
-    
     this.isRequesting = true;
-    this.requestStatus = null;
-    
+    this.statusMessage = '';
+    this.addLog('Method 1: Requesting phone...', 'info');
+
     try {
-      console.log('🔄 Requesting phone number...');
-      
-      const result = await this.telegramService.requestPhoneNumberDirect();
-      
-      console.log('✅ SUCCESS! Phone received:', result.phone);
-      console.log('📋 Contact info:', result.contact);
-      
-      // Save to component state and localStorage
-      this.savePhoneToStorage(result.phone, result.contact);
-      
-      // Show success status
-      this.requestStatus = {
-        type: 'success',
-        message: `✅ Phone number received: ${result.phone}`
-      };
-      
-      // Show Telegram alert
-      this.telegramService.showAlert(`✅ Phone: ${result.phone}`);
-      
+      const result = await this.telegramService.requestPhoneNumber();
+      this.savePhone(result.phone, result.contact);
+      this.statusMessage = `✅ Success: ${result.phone}`;
+      this.statusType = 'success';
+      this.addLog(`Phone received: ${result.phone}`, 'success');
+      this.telegramService.showAlert(`✅ ${result.phone}`);
     } catch (error: any) {
-      console.error('❌ Error:', error);
-      
-      this.requestStatus = {
-        type: 'error',
-        message: `❌ ${error}`
-      };
-      
+      this.statusMessage = `❌ ${error}`;
+      this.statusType = 'error';
+      this.addLog(`Error: ${error}`, 'error');
       this.telegramService.showAlert(`❌ ${error}`);
-      
     } finally {
       this.isRequesting = false;
     }
   }
 
-  // Method 2: Using Direct API
-  async requestPhoneDirect() {
+  async requestMethod2() {
     if (this.isRequesting) return;
-    
     this.isRequesting = true;
-    this.requestStatus = null;
-    
+    this.statusMessage = '';
+    this.addLog('Method 2: Requesting phone with events...', 'info');
+
     try {
-      console.log('🔄 Requesting phone (Direct API)...');
-      
-      const result = await this.telegramService.requestPhoneNumberDirect();
-      
-      console.log('✅ Phone received:', result.phone);
-      
-      this.savePhoneToStorage(result.phone, result.contact);
-      
-      this.requestStatus = {
-        type: 'success',
-        message: `✅ Phone: ${result.phone}`
-      };
-      
-      this.telegramService.showAlert(`✅ Success: ${result.phone}`);
-      
+      const result = await this.telegramService.requestPhoneNumberWithEvent();
+      this.savePhone(result.phone, result.contact);
+      this.statusMessage = `✅ Success: ${result.phone}`;
+      this.statusType = 'success';
+      this.addLog(`Phone received: ${result.phone}`, 'success');
+      this.telegramService.showAlert(`✅ ${result.phone}`);
     } catch (error: any) {
-      console.error('❌ Error:', error);
-      
-      this.requestStatus = {
-        type: 'error',
-        message: `❌ ${error}`
-      };
-      
+      this.statusMessage = `❌ ${error}`;
+      this.statusType = 'error';
+      this.addLog(`Error: ${error}`, 'error');
       this.telegramService.showAlert(`❌ ${error}`);
-      
     } finally {
       this.isRequesting = false;
     }
   }
 
-  showStoredData() {
-    this.showStorage = !this.showStorage;
-    this.updateStorageData();
-    console.log('📦 Storage data:', this.storageData);
+  async requestMethod3() {
+    if (this.isRequesting) return;
+    this.isRequesting = true;
+    this.statusMessage = '';
+    this.addLog('Method 3: Requesting phone with native API...', 'info');
+
+    try {
+      const result = await this.telegramService.requestPhoneNumberNative();
+      this.savePhone(result.phone, result.contact);
+      this.statusMessage = `✅ Success: ${result.phone}`;
+      this.statusType = 'success';
+      this.addLog(`Phone received: ${result.phone}`, 'success');
+      this.telegramService.showAlert(`✅ ${result.phone}`);
+    } catch (error: any) {
+      this.statusMessage = `❌ ${error}`;
+      this.statusType = 'error';
+      this.addLog(`Error: ${error}`, 'error');
+      this.telegramService.showAlert(`❌ ${error}`);
+    } finally {
+      this.isRequesting = false;
+    }
   }
 
-  clearAllData() {
-    if (confirm('⚠️ Clear all data including phone number?')) {
+  viewConsole() {
+    this.telegramService.logAllUserData();
+    this.addLog('Debug info logged to browser console', 'info');
+  }
+
+  clearData() {
+    if (confirm('Clear all data?')) {
       localStorage.clear();
       this.phoneNumber = null;
       this.contactInfo = null;
-      this.phoneTimestamp = null;
-      this.requestStatus = null;
-      this.storageData = {};
-      
-      console.log('🗑️ All data cleared');
-      this.telegramService.showAlert('🗑️ All data cleared!');
+      this.statusMessage = '';
+      this.addLog('All data cleared', 'warn');
     }
   }
 

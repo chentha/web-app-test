@@ -37,11 +37,10 @@
       
       <!-- Phone Display -->
       <div class="phone-display" *ngIf="phoneNumber">
-        <h2>✅ Phone Number Received!</h2>
+        <h2>User Information</h2>
         <div class="phone-box">
-          <span class="phone-icon">📱</span>
-          <span class="phone-text">{{ phoneNumber }}</span>
-          <span class="phone-text">{{ allData?.telegramUser?.username }}</span>
+          <div class="phone-text">+{{ phoneNumber }}</div>
+          <div class="phone-text">{{ allData?.telegramUser?.username }}</div>
         </div>
       </div>
 
@@ -57,37 +56,44 @@
         <button (click)="requestMethod1()" 
                 class="btn btn-primary" 
                 [disabled]="isRequesting">
-          <span *ngIf="!isRequesting">📞 Method 1: Standard SDK</span>
+          <span *ngIf="!isRequesting">Show All Data</span>
           <span *ngIf="isRequesting">⏳ Requesting...</span>
         </button>
 
-        <button (click)="requestMethod2()" 
+        <!-- <button (click)="requestMethod1()" 
+                class="btn btn-primary" 
+                [disabled]="isRequesting">
+          <span *ngIf="!isRequesting">📞 Method 1: Standard SDK</span>
+          <span *ngIf="isRequesting">⏳ Requesting...</span>
+        </button> -->
+
+        <!-- <button (click)="requestMethod2()" 
                 class="btn btn-info" 
                 [disabled]="isRequesting">
           <span *ngIf="!isRequesting">📞 Method 2: Event Listener</span>
           <span *ngIf="isRequesting">⏳ Requesting...</span>
-        </button>
+        </button> -->
 
-        <button (click)="requestMethod3()" 
+        <!-- <button (click)="requestMethod3()" 
                 class="btn btn-success" 
                 [disabled]="isRequesting">
           <span *ngIf="!isRequesting">📞 Method 3: Native API</span>
           <span *ngIf="isRequesting">⏳ Requesting...</span>
-        </button>
+        </button> -->
 
         <button (click)="refreshData()" class="btn btn-secondary">
-          🔄 Refresh Data
+          Refresh Data
         </button>
 
         <button (click)="clearData()" class="btn btn-danger">
-          🗑️ Clear All Data
+          Clear All Data
         </button>
       </div>
 
       <!-- All Data in One JSON Box -->
       <div class="data-box">
         <div class="data-header">
-          <h3>📦 All Data (JSON)</h3>
+          <h3>All Data (JSON)</h3>
           <button (click)="copyToClipboard()" class="copy-btn">
             📋 Copy
           </button>

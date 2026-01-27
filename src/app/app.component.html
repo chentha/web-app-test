@@ -1,5 +1,5 @@
 <div>
-  <h2>👋 Welcome {{ user.first_name }} {{ user.last_name }}</h2>
+  <!-- <h2>👋 Welcome {{ user.first_name }} {{ user.last_name }}</h2> -->
 
   <!-- <p><strong>ID:</strong> {{ user.id }}</p>
   <p><strong>First name:</strong> {{ user.first_name }}</p>
@@ -9,9 +9,80 @@
   <p><strong>Is Premium:</strong> {{ user.is_premium ? 'Yes' : 'No' }}</p>
   <p><strong>Allows PM:</strong> {{ user.allows_write_to_pm ? 'Yes' : 'No' }}</p> -->
 
-  <pre style="background:#f4f4f4;padding:10px;border-radius:6px;">
+  <!-- <pre style="background:#f4f4f4;padding:10px;border-radius:6px;">
   {{ user | json }}
   </pre>
 
-  <p><strong>Phone Number:</strong> {{ phoneNumber }}</p>
+  <p><strong>Phone Number:</strong> {{ phoneNumber }}</p> -->
+
+  <div>
+    <!-- <h2>👋 Welcome {{ user.first_name }} {{ user.last_name }}</h2> -->
+  
+    <!-- <p><strong>ID:</strong> {{ user.id }}</p>
+    <p><strong>First name:</strong> {{ user.first_name }}</p>
+    <p><strong>Last name:</strong> {{ user.last_name }}</p>
+    <p><strong>Username:</strong> {{ user.username || 'N/A' }}</p>
+    <p><strong>Language:</strong> {{ user.language_code }}</p>
+    <p><strong>Is Premium:</strong> {{ user.is_premium ? 'Yes' : 'No' }}</p>
+    <p><strong>Allows PM:</strong> {{ user.allows_write_to_pm ? 'Yes' : 'No' }}</p> -->
+  
+    <!-- <pre style="background:#f4f4f4;padding:10px;border-radius:6px;">
+    {{ tg | json }}
+    </pre> -->
+  
+    <!-- <p><strong>Phone Number:</strong> {{ phoneNumber }}</p> -->
+  
+    <div class="container">
+      <h1>Telegram Mini App</h1>
+      
+      <div class="user-info" *ngIf="userData">
+        <h2>User Information</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <strong>ID:</strong> {{ userData.id }}
+          </div>
+          <div class="info-item">
+            <strong>Name:</strong> {{ userData.first_name }} {{ userData.last_name }}
+          </div>
+          <div class="info-item">
+            <strong>Username:</strong> @{{ userData.username || 'N/A' }}
+          </div>
+          <div class="info-item">
+            <strong>Language:</strong> {{ userData.language_code }}
+          </div>
+          <div class="info-item">
+            <strong>Premium:</strong> {{ userData.is_premium ? 'Yes' : 'No' }}
+          </div>
+        </div>
+      </div>
+    
+      <div class="actions">
+        <button (click)="logUserData()" class="btn btn-primary">
+          📋 Console Log All Data
+        </button>
+        
+        <button (click)="requestPhone()" class="btn btn-success">
+          📞 Request Phone Number
+        </button>
+        
+        <button (click)="showUserAlert()" class="btn btn-info">
+          ⚠️ Show Alert
+        </button>
+        
+        <button (click)="showUserConfirm()" class="btn btn-warning">
+          ❓ Show Confirm
+        </button>
+        
+        <button (click)="sendDataToBot()" class="btn btn-secondary">
+          📤 Send Data to Bot
+        </button>
+      </div>
+    
+      <div class="raw-data">
+        <h3>Raw User Data</h3>
+        <pre>{{ userData | json }}</pre>
+      </div>
+    </div>
+  </div>
+  
 </div>

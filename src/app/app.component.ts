@@ -105,20 +105,77 @@ export class AppComponent implements OnInit {
   statusType: string = '';
   consoleLog: Array<{ time: string; message: string; type: string }> = [];
   
-  telegramVersion: string = '';
-  platform: string = '';
-  userId: number = 0;
+  // All data object
+  allData: any = {};
 
   constructor(private telegramService: TelegramService) {}
 
   ngOnInit() {
-    const webApp = this.telegramService.getWebApp();
-    this.telegramVersion = webApp.version;
-    this.platform = webApp.platform;
-    this.userId = webApp.initDataUnsafe?.user?.id || 0;
-    
     this.addLog('App initialized', 'info');
     this.loadFromStorage();
+    this.updateAllData();
+  }
+
+  updateAllData() {
+    const webApp = this.telegramService.getWebApp();
+    const user = webApp.initDataUnsafe?.user || null;
+    this.allData = {
+      timestamp: new Date().toISOString(),
+      phoneData: {
+        phoneNumber: this.phoneNumber,
+        contactInfo: this.contactInfo,
+        savedAt: localStorage.getItem('phone_timestamp')
+      },
+      telegramUser: {
+        id: user?.id || null,
+        firstName: user?.first_name || null,
+        lastName: user?.last_name || null,
+        username: user?.username || null
+      },
+      telegramPlatform: {
+        platform: webApp.platform,
+        version: webApp.version,
+        colorScheme: webApp.colorScheme,
+        isExpanded: webApp.isExpanded,
+        viewportHeight: webApp.viewportHeight,
+        viewportStableHeight: webApp.viewportStableHeight
+      },
+      telegramTheme: webApp.themeParams || {},
+      telegramInitData: {
+        authDate: webApp.initDataUnsafe?.auth_date,
+        hash: webApp.initDataUnsafe?.hash,
+        queryId: webApp.initDataUnsafe?.query_id,
+        startParam: webApp.initDataUnsafe?.start_param,
+        chatType: webApp.initDataUnsafe?.chat_type,
+        chatInstance: webApp.initDataUnsafe?.chat_instance
+      },
+      localStorage: {
+        keys: Object.keys(localStorage),
+        data: this.getLocalStorageData()
+      },
+      app: {
+        isRequesting: this.isRequesting,
+        statusMessage: this.statusMessage,
+        statusType: this.statusType,
+        logsCount: this.consoleLog.length
+      }
+    }
+  }
+
+  getLocalStorageData() {
+    const data: any = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        try {
+          const value = localStorage.getItem(key);
+          data[key] = value ? JSON.parse(value) : value;
+        } catch {
+          data[key] = localStorage.getItem(key);
+        }
+      }
+    }
+    return data;
   }
 
   addLog(message: string, type: string = 'info') {
@@ -139,16 +196,26 @@ export class AppComponent implements OnInit {
 
     const savedContact = localStorage.getItem('telegram_contact');
     if (savedContact) {
-      this.contactInfo = JSON.parse(savedContact);
+      try {
+        this.contactInfo = JSON.parse(savedContact);
+      } catch (e) {
+        this.addLog('Error parsing saved contact', 'error');
+      }
     }
   }
 
   savePhone(phone: string, contact: any) {
     this.phoneNumber = phone;
     this.contactInfo = contact;
+    
+    const timestamp = new Date().toISOString();
+    
     localStorage.setItem('telegram_phone_number', phone);
     localStorage.setItem('telegram_contact', JSON.stringify(contact));
+    localStorage.setItem('phone_timestamp', timestamp);
+    
     this.addLog(`Phone saved: ${phone}`, 'success');
+    this.updateAllData();
   }
 
   async requestMethod1() {
@@ -156,21 +223,23 @@ export class AppComponent implements OnInit {
     this.isRequesting = true;
     this.statusMessage = '';
     this.addLog('Method 1: Requesting phone...', 'info');
+    this.updateAllData();
 
     try {
       const result = await this.telegramService.requestPhoneNumber();
       this.savePhone(result.phone, result.contact);
-      this.statusMessage = `Success: ${result.phone}`;
+      this.statusMessage = `✅ Success: ${result.phone}`;
       this.statusType = 'success';
       this.addLog(`Phone received: ${result.phone}`, 'success');
-      this.telegramService.showAlert(`${result.phone}`);
+      this.telegramService.showAlert(`✅ ${result.phone}`);
     } catch (error: any) {
-      this.statusMessage = ` ${error}`;
+      this.statusMessage = `❌ ${error}`;
       this.statusType = 'error';
       this.addLog(`Error: ${error}`, 'error');
-      this.telegramService.showAlert(` ${error}`);
+      this.telegramService.showAlert(`❌ ${error}`);
     } finally {
       this.isRequesting = false;
+      this.updateAllData();
     }
   }
 
@@ -179,6 +248,7 @@ export class AppComponent implements OnInit {
     this.isRequesting = true;
     this.statusMessage = '';
     this.addLog('Method 2: Requesting phone with events...', 'info');
+    this.updateAllData();
 
     try {
       const result = await this.telegramService.requestPhoneNumberWithEvent();
@@ -194,6 +264,7 @@ export class AppComponent implements OnInit {
       this.telegramService.showAlert(`❌ ${error}`);
     } finally {
       this.isRequesting = false;
+      this.updateAllData();
     }
   }
 
@@ -202,36 +273,52 @@ export class AppComponent implements OnInit {
     this.isRequesting = true;
     this.statusMessage = '';
     this.addLog('Method 3: Requesting phone with native API...', 'info');
+    this.updateAllData();
 
     try {
       const result = await this.telegramService.requestPhoneNumberNative();
       this.savePhone(result.phone, result.contact);
-      this.statusMessage = `Success: ${result.phone}`;
+      this.statusMessage = `✅ Success: ${result.phone}`;
       this.statusType = 'success';
       this.addLog(`Phone received: ${result.phone}`, 'success');
-      this.telegramService.showAlert(`${result.phone}`);
+      this.telegramService.showAlert(`✅ ${result.phone}`);
     } catch (error: any) {
-      this.statusMessage = `${error}`;
+      this.statusMessage = `❌ ${error}`;
       this.statusType = 'error';
       this.addLog(`Error: ${error}`, 'error');
-      this.telegramService.showAlert(`error ${error}`);
+      this.telegramService.showAlert(`❌ ${error}`);
     } finally {
       this.isRequesting = false;
+      this.updateAllData();
     }
   }
 
-  viewConsole() {
-    this.telegramService.logAllUserData();
-    this.addLog('Debug info logged to browser console', 'info');
+  refreshData() {
+    this.updateAllData();
+    this.addLog('Data refreshed', 'info');
+    this.telegramService.showAlert('✅ Data refreshed!');
+  }
+
+  copyToClipboard() {
+    const jsonString = JSON.stringify(this.allData, null, 2);
+    navigator.clipboard.writeText(jsonString).then(() => {
+      this.addLog('Data copied to clipboard', 'success');
+      this.telegramService.showAlert('📋 Copied to clipboard!');
+    }).catch(err => {
+      this.addLog('Failed to copy: ' + err, 'error');
+    });
   }
 
   clearData() {
-    if (confirm('Clear all data?')) {
+    if (confirm('⚠️ Clear all data?')) {
       localStorage.clear();
       this.phoneNumber = null;
       this.contactInfo = null;
       this.statusMessage = '';
+      this.consoleLog = [];
+      this.updateAllData();
       this.addLog('All data cleared', 'warn');
+      this.telegramService.showAlert('🗑️ All data cleared!');
     }
   }
 

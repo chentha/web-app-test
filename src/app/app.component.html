@@ -42,25 +42,13 @@
           <span class="phone-icon">📱</span>
           <span class="phone-text">{{ phoneNumber }}</span>
         </div>
-        <div class="contact-info" *ngIf="contactInfo">
-          <p>👤 {{ contactInfo.first_name }} {{ contactInfo.last_name }}</p>
-          <p>🆔 ID: {{ contactInfo.user_id }}</p>
-        </div>
       </div>
 
-      <!-- Error/Status Display -->
+      <!-- Status Display -->
       <div class="status-box" *ngIf="statusMessage">
         <div [class]="'status ' + statusType">
           {{ statusMessage }}
         </div>
-      </div>
-
-      <!-- Debug Info -->
-      <div class="debug-info">
-        <h3>🔍 Debug Information</h3>
-        <p><strong>Telegram Version:</strong> {{ telegramVersion }}</p>
-        <p><strong>Platform:</strong> {{ platform }}</p>
-        <p><strong>User ID:</strong> {{ userId }}</p>
       </div>
 
       <!-- Action Buttons -->
@@ -86,31 +74,35 @@
           <span *ngIf="isRequesting">⏳ Requesting...</span>
         </button>
 
-        <button (click)="clearData()" class="btn btn-danger">
-          🗑️ Clear Data
+        <button (click)="refreshData()" class="btn btn-secondary">
+          🔄 Refresh Data
         </button>
 
-        <button (click)="viewConsole()" class="btn btn-secondary">
-          🔍 Log Debug Info to Console
+        <button (click)="clearData()" class="btn btn-danger">
+          🗑️ Clear All Data
         </button>
       </div>
 
-      <!-- Console Output -->
-      <div class="console-output">
-        <h3>📝 Console Output</h3>
+      <!-- All Data in One JSON Box -->
+      <div class="data-box">
+        <div class="data-header">
+          <h3>📦 All Data (JSON)</h3>
+          <button (click)="copyToClipboard()" class="copy-btn">
+            📋 Copy
+          </button>
+        </div>
+        <pre class="json-content">{{ allData | json }}</pre>
+      </div>
+
+      <!-- Console Logs -->
+      <div class="console-box">
+        <h3>📝 Console Logs</h3>
         <div class="console-content">
           <div *ngFor="let log of consoleLog" [class]="'log-' + log.type">
             <strong>{{ log.time }}</strong> - {{ log.message }}
           </div>
         </div>
       </div>
-
-      <div style="background-color: rgba(245, 245, 245, 0.725);">
-        <pre>
-          {{contactInfo}}
-        </pre>
-      </div>
-      
     </div>
 
 

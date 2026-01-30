@@ -341,4 +341,21 @@ export class AppComponent implements OnInit {
     }
   }
 
+  sendToBot() {
+    const webApp = this.telegramService.getWebApp();
+  
+    const payload = {
+      action: 'PHONE_SHARED',
+      phone: this.phoneNumber,
+      user: this.allData.telegramUser,
+      timestamp: new Date().toISOString()
+    };
+  
+    webApp.sendData(JSON.stringify(payload));
+  
+    this.addLog('Data sent to bot', 'success');
+    this.telegramService.showAlert('📨 Sent to bot!');
+  }
+  
+
 }

@@ -60,6 +60,9 @@
           <span *ngIf="isRequesting">⏳ Requesting...</span>
         </button>
 
+        <button (click)="sendToBot()">Send to Bot</button>
+
+
         <!-- <button (click)="requestMethod1()" 
                 class="btn btn-primary" 
                 [disabled]="isRequesting">
